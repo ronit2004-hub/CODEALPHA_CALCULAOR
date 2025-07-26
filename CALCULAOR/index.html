@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 350px;
+            background-color: #2d3748;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .display {
+            padding: 20px;
+            text-align: right;
+            background-color: #1a202c;
+            color: white;
+            font-size: 2rem;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .previous-operand {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            min-height: 1.5rem;
+            word-wrap: break-word;
+        }
+
+        .current-operand {
+            font-size: 2.5rem;
+            word-wrap: break-word;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #4a5568;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            padding: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #2d3748;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #4a5568;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background-color: #f6ad55;
+            color: #1a202c;
+        }
+
+        .operator:hover {
+            background-color: #fbd38d;
+        }
+
+        .equals {
+            background-color: #68d391;
+            color: #1a202c;
+        }
+
+        .equals:hover {
+            background-color: #9ae6b4;
+        }
+
+        .clear, .delete {
+            background-color: #e53e3e;
+        }
+
+        .clear:hover, .delete:hover {
+            background-color: #feb2b2;
+        }
+
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        /* Animation for button press */
+        @keyframes buttonPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .pressed {
+            animation: buttonPress 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="previous-operand" id="previous-operand"></div>
+            <div class="current-operand" id="current-operand">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear span-2">AC</button>
+            <button class="delete">DEL</button>
+            <button class="operator">÷</button>
+            
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button class="operator">×</button>
+            
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button class="operator">-</button>
+            
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button class="operator">+</button>
+            
+            <button>0</button>
+            <button>.</button>
+            <button class="equals span-2">=</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const previousOperandElement = document.getElementById('previous-operand');
+            const currentOperandElement = document.getElementById('current-operand');
+            const buttons = document.querySelectorAll('button');
+            
+            let currentOperand = '0';
+            let previousOperand = '';
+            let operation = undefined;
+            let resetScreen = false;
+
+            // Update display
+            function updateDisplay() {
+                currentOperandElement.textContent = currentOperand;
+                if (operation != null) {
+                    previousOperandElement.textContent = 
+                        `${previousOperand} ${operation}`;
+                } else {
+                    previousOperandElement.textContent = '';
+                }
+            }
+
+            // Add number to display
+            function appendNumber(number) {
+                if (currentOperand === '0' || resetScreen) {
+                    currentOperand = '';
+                    resetScreen = false;
+                }
+                if (number === '.' && currentOperand.includes('.')) return;
+                currentOperand += number;
+            }
+
+            // Choose operation
+            function chooseOperation(op) {
+                if (currentOperand === '') return;
+                if (previousOperand !== '') {
+                    compute();
+                }
+                operation = op;
+                previousOperand = currentOperand;
+                resetScreen = true;
+            }
+
+            // Compute result
+            function compute() {
+                let computation;
+                const prev = parseFloat(previousOperand);
+                const current = parseFloat(currentOperand);
+                
+                if (isNaN(prev) || isNaN(current)) return;
+                
+                switch (operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        computation = prev / current;
+                        break;
+                    default:
+                        return;
+                }
+                
+                currentOperand = computation.toString();
+                operation = undefined;
+                previousOperand = '';
+                resetScreen = true;
+            }
+
+            // Clear calculator
+            function clear() {
+                currentOperand = '0';
+                previousOperand = '';
+                operation = undefined;
+            }
+
+            // Delete last digit
+            function deleteNumber() {
+                currentOperand = currentOperand.slice(0, -1);
+                if (currentOperand === '') {
+                    currentOperand = '0';
+                }
+            }
+
+            // Add button press animation
+            function animateButton(button) {
+                button.classList.add('pressed');
+                setTimeout(() => {
+                    button.classList.remove('pressed');
+                }, 200);
+            }
+
+            // Handle button clicks
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    animateButton(button);
+                    
+                    if (button.classList.contains('operator')) {
+                        chooseOperation(button.textContent);
+                    } else if (button.classList.contains('equals')) {
+                        compute();
+                    } else if (button.classList.contains('clear')) {
+                        clear();
+                    } else if (button.classList.contains('delete')) {
+                        deleteNumber();
+                    } else {
+                        appendNumber(button.textContent);
+                    }
+                    
+                    updateDisplay();
+                });
+            });
+
+            // Keyboard support
+            document.addEventListener('keydown', (e) => {
+                let keyPressed = e.key;
+                let button;
+
+                switch (keyPressed) {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        button = document.querySelector(`button:not(.operator):not(.clear):not(.delete):not(.equals):contains("${keyPressed}")`);
+                        appendNumber(keyPressed);
+                        break;
+                    case '.':
+                        button = document.querySelector('button:contains(".")');
+                        appendNumber(keyPressed);
+                        break;
+                    case '+':
+                    case '-':
+                        button = document.querySelector(`.operator:contains("${keyPressed}")`);
+                        chooseOperation(keyPressed);
+                        break;
+                    case '*':
+                        button = document.querySelector('.operator:contains("×")');
+                        chooseOperation('×');
+                        break;
+                    case '/':
+                        button = document.querySelector('.operator:contains("÷")');
+                        chooseOperation('÷');
+                        break;
+                    case 'Enter':
+                        button = document.querySelector('.equals');
+                        compute();
+                        break;
+                    case 'Backspace':
+                        button = document.querySelector('.delete');
+                        deleteNumber();
+                        break;
+                    case 'Escape':
+                        button = document.querySelector('.clear');
+                        clear();
+                        break;
+                    default:
+                        return;
+                }
+
+                if (button) {
+                    animateButton(button);
+                    updateDisplay();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
